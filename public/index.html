@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      src="https://cdn.socket.io/4.6.0/socket.io.min.js"
+      integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+"
+      crossorigin="anonymous"
+    ></script>
+    <title>Chat Mal</title>
+    <style>
+      .pattern {
+        background-color: #e5e5f7;
+        opacity: 0.8;
+        background-image: radial-gradient(#444cf7 0.5px, #e5e5f7 0.5px);
+        background-size: 30px 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      class="bg-slate-100 w-full h-[100vh] flex justify-center items-center pattern"
+    >
+      <div class="w-[95%] max-w-[600px] mx-auto bg-white rounded-lg shadow-md">
+        <div class="bg-indigo-200 p-3 rounded-t-lg text-xl text-indigo-800">
+          Chat Mal <span class="float-right">Socket.io</span>
+        </div>
+        <!-- start chat message section  -->
+        <div class="p-3 bg-white h-[40vh] overflow-hidden overflow-y-auto">
+            <div id="messages"></div>
+            <div id="typing"></div>
+        </div>
+        <!-- end chat message section  -->
+        <div
+          class="bg-indigo-200 p-3 rounded-b-lg text-xl text-indigo-800 flex"
+        >
+          <input
+            type="text"
+            class="p-2 px-3 rounded-tl-md rounded-bl-lg bg-slate-100 w-full text-[18px]"
+            placeholder="Enter your message"
+            id="message"
+            autofocus
+          />
+          <button
+            class="p-2 px-3 w-[100px] rounded-tr-md rounded-br-lg bg-indigo-500 hover:bg-indigo-600 text-white text-[18px]"
+            onclick="sendMessage()"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script
+    src="https://code.jquery.com/jquery-3.7.1.min.js"
+    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+    crossorigin="anonymous"
+  ></script>
+  <script>
+    const socket = io("http://localhost:3000");
+    const user_token = localStorage.getItem("user_token");
+    if (!user_token) {
+      localStorage.setItem("user_token", generateRandomToken(10));
+    }
+
+    function generateRandomToken(length) {
+      const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+      let token = "";
+
+      for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        token += characters.charAt(randomIndex);
+      }
+
+      return token;
+    }
+    const sendMessage = async () => {
+        const message = $("#message")
+        socket.emit("messages", { user_token: user_token, message: message.val() });
+        message.val("");
+        message.focus();
+    };
+
+    socket.on("messages", (data) => {
+      const messages = $("#messages");
+      $('#typing').html('')
+
+      user_token === data.user_token
+        ? messages.append(`
+        <div class="flex gap-1 items-start justify-end mb-1">
+            <div
+            class="rounded-md bg-purple-300 text-purple-800 py-[5px] px-3 inline-block shadow-md border border-white min-h-[30px] max-w-[300px] leading-[28px] text-sm"
+            >
+            ${data.message}
+            </div>
+            <div
+            class="w-[35px] h-[35px] rounded-full bg-rose-200 text-rose-800 shadow-md border border-white text-center font-semibold leading-[32px]"
+            >
+            ${data && data.user_token[0].toUpperCase()}
+            </div>
+        </div>`)
+        : messages.append(`
+            <div class="flex gap-1 items-start mb-1">
+              <div
+                class="w-[35px] h-[35px] rounded-full bg-indigo-200 text-indigo-800 shadow-md border border-white text-center font-semibold leading-[32px]"
+              >
+                ${data && data.user_token[0].toUpperCase()}
+              </div>
+              <div
+                class="rounded-md bg-blue-300 text-blue-800 py-[5px] px-3 inline-block shadow-md border border-white min-h-[30px] max-w-[300px] leading-[28px] text-sm"
+              >
+                ${data.message}
+              </div>
+            </div>`);
+    });
+
+    $('#message').on('keypress', (e) => {
+        socket.emit("typing", { user_token: user_token });
+    })
+
+    socket.on('typing', data => {
+        const typing = $('#typing');
+        typing.html(`<div class="text-indigo-500 animate-bounce ms-[40px] mt-2 text-sm">Someone is typing . . .</div>`)
+        setTimeout(() => {
+            typing.html('');
+        }, 3000)
+    })
+
+    $(document).on("keypress", function (event) {
+      const keycode = event.keyCode ? event.keyCode : event.which;
+      if (keycode == "13") {
+        sendMessage();
+      }
+    });
+  </script>
+</html>
