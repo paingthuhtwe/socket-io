@@ -59,7 +59,7 @@
     crossorigin="anonymous"
   ></script>
   <script>
-    const socket = io("http://localhost:3000");
+    const socket = io("https://chat-mal.vercel.app");
     const user_token = localStorage.getItem("user_token");
     if (!user_token) {
       localStorage.setItem("user_token", generateRandomToken(10));
