@@ -25,7 +25,7 @@
     >
       <div class="w-[95%] max-w-[600px] mx-auto bg-white rounded-lg shadow-md">
         <div class="bg-indigo-200 p-3 rounded-t-lg text-xl text-indigo-800">
-          Chat Mal <span class="float-right">Socket.io</span>
+          Chat Mal <span class="float-right">Socket.io <span id="user_count">[ 0 ]</span></span>
         </div>
         <!-- start chat message section  -->
         <div class="p-3 bg-white h-[40vh] overflow-hidden overflow-y-auto">
@@ -59,7 +59,7 @@
     crossorigin="anonymous"
   ></script>
   <script>
-    const socket = io("https://chat-mal.vercel.app:4444");
+    const socket = io("http://localhost:4444");
     const user_token = localStorage.getItem("user_token");
     if (!user_token) {
       localStorage.setItem("user_token", generateRandomToken(10));
@@ -134,5 +134,9 @@
         sendMessage();
       }
     });
+
+    socket.on('connectedUsersCount', count => {
+      $('#user_count').html(`[ ${count} ]`)
+    })
   </script>
 </html>

@@ -1,15 +1,17 @@
 const express = require("express");
 const app = express();
-const bodyParser = require("body-parser");
+const cors = require('cors');
 const socket = require('socket.io');
+const fileUplaod = require('express-fileupload');
 
 // Middleware
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(cors());
+app.use(fileUplaod());
 
 app.get('/', (req, res, next) => {
   res.status(200).sendFile(__dirname + '/public/index.html');
 })
-
 // Start the server
 const PORT = 4444;
 const server = app.listen(PORT, () => {
@@ -19,13 +21,20 @@ const server = app.listen(PORT, () => {
 // Socket Setup 
 const io = socket(server);
 
+let connectedUsersCount = 0;
 io.on('connection', (socket) => {
-    console.log('Socket connection connected.' + ' ' +socket.id);
     socket.on('messages', data => {
         io.sockets.emit('messages', data)
     })
     socket.on('typing', data => {
         socket.broadcast.emit('typing', data)
-        console.log(data)
     })
+
+    connectedUsersCount++;
+    io.emit('connectedUsersCount', connectedUsersCount);
+
+    socket.on('disconnect', () => {
+      connectedUsersCount--;
+      io.emit('connectedUsersCount', connectedUsersCount);
+  });
 })
