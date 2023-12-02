@@ -13,7 +13,7 @@ app.use(cors());
 app.use(fileUplaod());
 
 app.get("/", (req, res, next) => {
-  res.status(200).sendFile(__dirname + "/public/");
+  res.status(200).send({message: 'Welcome to generate eticket!'})
 });
 // for frotend image
 app.get("/ticket/:lottery_type/:ticket_name", (req, res, next) => {
